@@ -1,5 +1,9 @@
 name: CI with Auto Merge
 
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   push:
     branches:
@@ -36,7 +40,6 @@ jobs:
           script: |
             const branch = context.ref.replace('refs/heads/', '');
             if(branch.startsWith('feature/')) {
-              // ეძებს ღია PR-ს ამ feature ბრენჩიდან main-ში
               const prs = await github.rest.pulls.list({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -45,7 +48,6 @@ jobs:
                 state: 'open'
               });
               if(prs.data.length > 0) {
-                // ავტომერჯი PR-ს
                 await github.rest.pulls.merge({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
