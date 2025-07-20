@@ -1,4 +1,5 @@
 export default {
-  transform: {},
-  extensionsToTreatAsEsm: ['.js'],
+  transform: {
+    "^.+\\.js$": "babel-jest"
+  },
 };
