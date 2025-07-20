@@ -1,0 +1,64 @@
+name: CI with Auto Merge
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Run tests
+        run: yarn test
+
+  auto-merge:
+    needs: test
+    if: success()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Auto merge PR to main
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const branch = context.ref.replace('refs/heads/', '');
+            if(branch.startsWith('feature/')) {
+              // ეძებს ღია PR-ს ამ feature ბრენჩიდან main-ში
+              const prs = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:${branch}`,
+                base: 'master',
+                state: 'open'
+              });
+              if(prs.data.length > 0) {
+                // ავტომერჯი PR-ს
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prs.data[0].number,
+                  merge_method: 'squash'
+                });
+              } else {
+                await github.rest.pulls.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `Auto PR from ${branch}`,
+                  head: branch,
+                  base: 'master'
+                });
+              }
+            }
