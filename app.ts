@@ -11,10 +11,8 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use("/login",loginRouter);
-app.get("/", (req, res) => {
+app.get("/", (_, res) => {
     res.send("Hello World!");
-
 });
-///comments
 
 export default app;
